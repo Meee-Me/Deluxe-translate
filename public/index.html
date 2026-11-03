@@ -141,6 +141,23 @@ textarea:focus-visible{outline:none}
 .site:hover{border-color:var(--accent)}
 .site b{font:600 17px var(--body)}
 .site span{font:12px var(--mono);color:var(--muted)}
+.overlay.full{background:var(--bg);place-items:stretch;padding:0}
+.full .sheet{max-width:none;max-height:none;height:100%;border:0;border-radius:0;background:transparent;align-content:center;justify-items:center;text-align:center;gap:30px;
+  padding-block:max(24px,env(safe-area-inset-top,0px)) max(24px,env(safe-area-inset-bottom,0px));
+  padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+.full h2{font-size:clamp(36px,10vw,60px)}
+.full .credit{justify-items:center;gap:6px}
+.full .credit .who{font-size:clamp(30px,8vw,44px)}
+.full .credit.small .who{font-size:clamp(24px,6vw,32px)}
+.closeX{position:fixed;top:max(12px,env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));z-index:21}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:no-preference){
+  .full:not([hidden]) .sheet>*{animation:rise .6s both}
+  .full:not([hidden]) .sheet>*:nth-child(3){animation-delay:.1s}
+  .full:not([hidden]) .sheet>*:nth-child(4){animation-delay:.2s}
+  .full:not([hidden]) .sheet>*:nth-child(5){animation-delay:.3s}
+  .full:not([hidden]) .sheet>*:nth-child(6){animation-delay:.4s}
+}
 @media (prefers-reduced-motion:no-preference){.mode,.btn,.swap,.chip2,.iconbtn{transition:background .15s,border-color .15s,color .15s}}
 </style>
 
@@ -254,7 +271,10 @@ textarea:focus-visible{outline:none}
   <p class="foot">Translations are written by Claude and can contain mistakes. Check anything important, such as medical, legal or travel documents, with a qualified person.</p>
 </div>
 
-<div class="overlay" id="credits" hidden role="dialog" aria-modal="true" aria-labelledby="creditsTitle">
+<div class="overlay full" id="credits" hidden role="dialog" aria-modal="true" aria-labelledby="creditsTitle">
+  <button class="iconbtn closeX close" type="button" aria-label="Close credits" title="Close">
+    <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+  </button>
   <div class="sheet">
     <h2 id="creditsTitle">Deluxe <em>Translate</em></h2>
     <hr class="rule">
@@ -269,8 +289,8 @@ textarea:focus-visible{outline:none}
   <div class="sheet">
     <h2 id="moreTitle">More by <em>Deluxelord</em></h2>
     <hr class="rule">
-    <a class="site" href="https://github.com/Meee-Me/Deluxe-Convert" target="_blank" rel="noopener noreferrer"><b>Deluxe Convert</b><span>github.com/Meee-Me/Deluxe-Convert</span></a>
-    <a class="site" href="https://github.com/Meee-Me/-youtube-guider-ai" target="_blank" rel="noopener noreferrer"><b>YouTube Guider AI</b><span>github.com/Meee-Me/-youtube-guider-ai</span></a>
+    <a class="site" href="https://deluxe-convert-cloud.deluxelordd.workers.dev/" target="_blank" rel="noopener noreferrer"><b>Deluxe Convert</b><span>deluxe-convert-cloud.deluxelordd.workers.dev</span></a>
+    <a class="site" href="https://youtube-guide-ai.netlify.app/" target="_blank" rel="noopener noreferrer"><b>YouTube Guider AI</b><span>youtube-guide-ai.netlify.app</span></a>
     <button class="btn close" type="button">Close</button>
   </div>
 </div>
@@ -583,7 +603,7 @@ textarea:focus-visible{outline:none}
   function openSheet(id){
     lastFocus=document.activeElement;
     var o=$(id); o.hidden=false;
-    var c=o.querySelector(".close"); if(c) c.focus();
+    var c=o.querySelector(".sheet .close")||o.querySelector(".close"); if(c) c.focus();
   }
   function closeSheets(){
     ["credits","more"].forEach(function(id){$(id).hidden=true});
@@ -594,7 +614,7 @@ textarea:focus-visible{outline:none}
   ["credits","more"].forEach(function(id){
     var o=$(id);
     o.addEventListener("click",function(e){if(e.target===o) closeSheets()});
-    o.querySelector(".close").addEventListener("click",closeSheets);
+    o.querySelectorAll(".close").forEach(function(b){b.addEventListener("click",closeSheets)});
   });
   document.addEventListener("keydown",function(e){
     if(e.key==="Escape" && (!$("credits").hidden || !$("more").hidden)) closeSheets();
