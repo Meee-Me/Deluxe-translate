@@ -242,7 +242,7 @@ textarea:focus-visible{outline:none}
     set:function(k,v){try{localStorage.setItem(k,v)}catch(e){}}
   };
 
-  var sample=null, imagesOK=true, busy=false, ctl=null, photo=null, photoURL=null, lastLang="", lastResult="";
+  var sample=null, server=false, imagesOK=true, busy=false, ctl=null, photo=null, photoURL=null, lastLang="", lastResult="";
 
   /* language selects */
   function opt(sel,v,t){var o=document.createElement("option");o.value=v;o.textContent=t;sel.appendChild(o)}
@@ -328,14 +328,45 @@ textarea:focus-visible{outline:none}
     prompt_too_large:"That text is too long. Translate it in smaller parts."
   };
 
+  /* Standalone hosting: the Netlify function at /api/translate does the translating */
+  function toJpeg(file){
+    return new Promise(function(resolve,reject){
+      var url=URL.createObjectURL(file), img=new Image();
+      img.onload=function(){
+        var max=1600, s=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));
+        var c=document.createElement("canvas");
+        c.width=Math.max(1,Math.round(img.naturalWidth*s)); c.height=Math.max(1,Math.round(img.naturalHeight*s));
+        c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+        URL.revokeObjectURL(url);
+        resolve(c.toDataURL("image/jpeg",0.85).split(",")[1]);
+      };
+      img.onerror=function(){URL.revokeObjectURL(url);reject({code:"image_rejected"})};
+      img.src=url;
+    });
+  }
+  async function serverTranslate(meta,signal){
+    var body={mode:meta.mode,from:meta.from||"",to:meta.to};
+    if(meta.mode==="text") body.text=meta.src; else body.image=await toJpeg(photo);
+    var res;
+    try{
+      res=await fetch("/api/translate",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body),signal:signal});
+    }catch(e){
+      if(e&&e.name==="AbortError") throw {code:"cancelled"};
+      throw {code:"upstream_error"};
+    }
+    if(!res.ok) throw {code:res.status===429?"rate_limited":(res.status===413?"prompt_too_large":"upstream_error")};
+    var data=await res.json();
+    return {text:data.text||"",truncated:false};
+  }
+
   async function go(prompt,opts,meta){
     if(busy) return;
-    if(!sample){showMsg("Translation needs Claude access, which this view does not have. Open the page in Claude to use it.",true);return}
+    if(!sample && !server){showMsg("Translation needs Claude access, which this view does not have. Open the page in Claude to use it.",true);return}
     ctl=new AbortController(); setBusy(true); showMsg("");
     render({lang:"",orig:"",tr:""},true);
     var o=Object.assign({signal:ctl.signal,onText:function(u){render(parse(u.text),true)}},opts||{});
     try{
-      var r=await sample(prompt,o);
+      var r=sample ? await sample(prompt,o) : await serverTranslate(meta,ctl.signal);
       var p=parse(r.text); render(p,false);
       if(r.truncated) showMsg("The translation was cut short. Translate the rest in a second pass.");
       if(meta && meta.mode==="text" && p.tr) addHistory({from:p.lang||meta.from||"Auto",to:meta.to,src:meta.src,tr:p.tr});
@@ -379,7 +410,8 @@ textarea:focus-visible{outline:none}
     if(!photo){showMsg("Take or choose a photo first.",true);return}
     if(!imagesOK){showMsg(ERR.images_unavailable,true);return}
     var to=needTo(); if(!to) return;
-    go(photoPrompt(getLang("from"),to),{images:photo},{mode:"photo"});
+    var from=getLang("from");
+    go(photoPrompt(from,to),{images:photo},{mode:"photo",from:from,to:to});
   }
   $("goText").addEventListener("click",runText);
   $("goPhoto").addEventListener("click",runPhoto);
@@ -506,7 +538,7 @@ textarea:focus-visible{outline:none}
       }
     }).catch(function(){sample=null});
   } else {
-    showMsg("Translation needs Claude access, which this view does not have. Open the page in Claude to use it.",true);
+    server=true;
   }
 })();
 </script>

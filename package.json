@@ -1,0 +1,11 @@
+{
+  "name": "deluxe-translate",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Deluxe Translate: text and photo translation, powered by Claude through Netlify AI Gateway.",
+  "dependencies": {
+    "@anthropic-ai/sdk": "latest",
+    "@netlify/functions": "latest"
+  }
+}
