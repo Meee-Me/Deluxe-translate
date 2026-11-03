@@ -1,5 +1,10 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Deluxe Translate</title>
-<meta name="claude:viewport-fit-sides" content="cover">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,600;1,6..96,500&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -27,6 +32,7 @@
   --brass:#D9BC70; --danger:#FF8F86; --focus:#92A4FF; color-scheme:dark;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{
   margin:0; background:var(--bg); color:var(--fg);
   font:15px/1.5 var(--body);
@@ -94,6 +100,22 @@ textarea:focus-visible{outline:none}
 .hist .code{font:11px var(--mono);color:var(--brass);white-space:nowrap}
 .hist .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .foot{font-size:12px;color:var(--muted);max-width:70ch}
+.links{display:flex;flex-wrap:wrap;gap:8px}
+.overlay{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.62);display:grid;place-items:center;
+  padding-block:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-bottom,0px));
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.sheet{width:100%;max-width:440px;max-height:100%;overflow:auto;background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:16px;padding:26px 22px;display:grid;gap:18px}
+.sheet h2{margin:0;font:600 28px/1.05 var(--display)}
+.sheet h2 em{font-style:italic;font-weight:500}
+.sheet .rule{height:2px;width:56px;background:var(--brass);border:0;margin:0}
+.credit{display:grid;gap:2px}
+.credit .who{font:600 24px/1.2 var(--display)}
+.credit.small .who{font-size:20px}
+.tag{margin:0;color:var(--muted);font-size:13px}
+.site{display:grid;gap:2px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;color:var(--fg);text-decoration:none;overflow-wrap:anywhere}
+.site:hover{border-color:var(--accent)}
+.site b{font:600 17px var(--body)}
+.site span{font:12px var(--mono);color:var(--muted)}
 @media (prefers-reduced-motion:no-preference){.tab,.btn,.swap{transition:background .15s,border-color .15s}}
 </style>
 
@@ -181,7 +203,34 @@ textarea:focus-visible{outline:none}
     <div class="hist" id="hist"></div>
   </section>
 
+  <div class="links">
+    <button class="btn ghost small" id="openCredits" type="button">Credits</button>
+    <button class="btn ghost small" id="openMore" type="button">More by Deluxelord</button>
+  </div>
   <p class="foot">Translations are written by Claude and can contain mistakes. Check anything important, such as medical, legal or travel documents, with a qualified person.</p>
+</div>
+
+<div class="overlay" id="credits" hidden role="dialog" aria-modal="true" aria-labelledby="creditsTitle">
+  <div class="sheet">
+    <div>
+      <h2 id="creditsTitle">Deluxe <em>Translate</em></h2>
+    </div>
+    <hr class="rule">
+    <div class="credit"><span class="eyebrow">Directed by</span><span class="who">Shivad Sujith</span></div>
+    <div class="credit small"><span class="eyebrow">AI support</span><span class="who">Claude</span></div>
+    <div class="credit small"><span class="eyebrow">Powered by</span><span class="who">Netlify</span></div>
+    <button class="btn close" type="button">Close</button>
+  </div>
+</div>
+
+<div class="overlay" id="more" hidden role="dialog" aria-modal="true" aria-labelledby="moreTitle">
+  <div class="sheet">
+    <h2 id="moreTitle">More by <em>Deluxelord</em></h2>
+    <hr class="rule">
+    <a class="site" href="https://github.com/Meee-Me/Deluxe-Convert" target="_blank" rel="noopener noreferrer"><b>Deluxe Convert</b><span>github.com/Meee-Me/Deluxe-Convert</span></a>
+    <a class="site" href="https://github.com/Meee-Me/-youtube-guider-ai" target="_blank" rel="noopener noreferrer"><b>YouTube Guider AI</b><span>github.com/Meee-Me/-youtube-guider-ai</span></a>
+    <button class="btn close" type="button">Close</button>
+  </div>
 </div>
 
 <script>
@@ -423,6 +472,28 @@ textarea:focus-visible{outline:none}
   $("histClear").addEventListener("click",function(){hist=[];store.set("dt.hist","[]");renderHist()});
   renderHist();
 
+  /* credits and more-sites screens */
+  var lastFocus=null;
+  function openSheet(id){
+    lastFocus=document.activeElement;
+    var o=$(id); o.hidden=false;
+    var c=o.querySelector(".close"); if(c) c.focus();
+  }
+  function closeSheets(){
+    ["credits","more"].forEach(function(id){$(id).hidden=true});
+    if(lastFocus&&lastFocus.focus) lastFocus.focus();
+  }
+  $("openCredits").addEventListener("click",function(){openSheet("credits")});
+  $("openMore").addEventListener("click",function(){openSheet("more")});
+  ["credits","more"].forEach(function(id){
+    var o=$(id);
+    o.addEventListener("click",function(e){if(e.target===o) closeSheets()});
+    o.querySelector(".close").addEventListener("click",closeSheets);
+  });
+  document.addEventListener("keydown",function(e){
+    if(e.key==="Escape" && (!$("credits").hidden || !$("more").hidden)) closeSheets();
+  });
+
   /* Claude access */
   if(window.claude && window.claude.use){
     window.claude.use("sample").then(function(s){
@@ -439,3 +510,5 @@ textarea:focus-visible{outline:none}
   }
 })();
 </script>
+
+</html>

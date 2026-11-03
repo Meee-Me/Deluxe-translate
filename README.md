@@ -9,6 +9,8 @@ Translate typed text or photos of signs, menus, documents and handwriting betwee
 - Copy, swap languages, reuse a translation as new input
 - Recent text translations kept in the browser (nothing is sent to any server of ours)
 - Light and dark themes, built for phone screens first
+- Credits screen (directed by Shivad Sujith, AI support by Claude, powered by Netlify)
+- "More by Deluxelord" screen linking to Deluxe Convert and YouTube Guider AI
 
 ## Files
 
