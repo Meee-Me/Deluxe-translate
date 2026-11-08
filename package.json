@@ -3,9 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Deluxe Translate: text and photo translation, powered by Claude through Netlify AI Gateway.",
+  "description": "Deluxe Translate: text and photo translation, powered by Claude through Vercel AI Gateway (or Netlify AI Gateway).",
   "dependencies": {
-    "@anthropic-ai/sdk": "latest",
-    "@netlify/functions": "latest"
+    "@anthropic-ai/sdk": "1.6.0",
+    "@netlify/functions": "latest",
+    "@vercel/oidc": "4.0.7"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

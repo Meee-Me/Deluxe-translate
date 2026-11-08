@@ -1,0 +1,8 @@
+{
+  "outputDirectory": "public",
+  "functions": {
+    "api/translate.mjs": {
+      "maxDuration": 60
+    }
+  }
+}
