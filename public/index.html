@@ -120,6 +120,18 @@ textarea:focus-visible{outline:none}
 .hist .code{font:11px var(--mono);color:var(--brass);white-space:nowrap}
 .hist .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .links{display:flex;flex-wrap:wrap;gap:8px}
+.ddot{width:8px;height:8px;border-radius:50%;background:var(--line);flex:none}
+.ddot.on{background:#2f9e6e;box-shadow:0 0 0 3px rgba(47,158,110,.18)}
+#openDrive{display:inline-flex;align-items:center;gap:8px;max-width:100%}
+#openDrive span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dtext{margin:0;color:var(--muted);font-size:14px;line-height:1.5}.dtext b{color:var(--fg)}
+.dsteps{margin:0;padding-left:20px;font-size:14px;line-height:1.6}.dsteps a{color:var(--accent)}
+.dform{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.dcode{flex:1;min-width:0;font:600 17px var(--mono);letter-spacing:2px;text-transform:uppercase;padding:11px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--fg)}
+.dcode:focus{outline:2px solid var(--accent);outline-offset:1px}
+.dmsg{margin:0;font-size:14px;min-height:20px}.dmsg.err{color:var(--danger)}.dmsg.ok{color:#2f9e6e}
+#driveOff,#driveOn{display:grid;gap:12px}#driveOff[hidden],#driveOn[hidden]{display:none}
+#saveDrive.saved{color:#2f9e6e;border-color:#2f9e6e}
 .foot{font-size:12px;color:var(--muted);max-width:70ch;margin:0}
 
 @media (min-width:820px){
@@ -258,6 +270,9 @@ textarea:focus-visible{outline:none}
           <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></svg><span id="copyLabel">Copy</span>
         </button>
         <button class="btn ghost small" id="reuse" type="button" disabled>Use as input</button>
+        <button class="btn ghost small" id="saveDrive" type="button" disabled>
+          <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width:16px;height:16px"><path d="M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 8.5a4 4 0 0 1-.5 9.5H7z"/><path d="M12 10v6M9.5 13.5 12 16l2.5-2.5"/></svg><span id="saveLabel">Save to Deluxe Drive</span>
+        </button>
         <button class="btn ghost small" id="stop" type="button" hidden>Stop</button>
       </div>
     </section>
@@ -271,6 +286,7 @@ textarea:focus-visible{outline:none}
   <div class="links">
     <button class="btn ghost small" id="openCredits" type="button">Credits</button>
     <button class="btn ghost small" id="openMore" type="button">More by Deluxelord</button>
+    <button class="btn ghost small" id="openDrive" type="button"><span class="ddot" id="driveDot"></span><span id="driveLabel">Connect Deluxe Drive</span></button>
   </div>
   <p class="foot">Translations are written by Claude and can contain mistakes. Check anything important, such as medical, legal or travel documents, with a qualified person.</p>
 </div>
@@ -301,6 +317,32 @@ textarea:focus-visible{outline:none}
   </div>
 </div>
 
+<div class="overlay" id="driveSheet" hidden role="dialog" aria-modal="true" aria-labelledby="driveTitle">
+  <div class="sheet">
+    <h2 id="driveTitle">Deluxe <em>Drive</em></h2>
+    <hr class="rule">
+    <div id="driveOff">
+      <p class="dtext">Connect once, then every translation has <b>Save to Deluxe Drive</b>. It is kept in a <b>Deluxe Translate</b> folder in your drive.</p>
+      <ol class="dsteps">
+        <li>Open <a href="https://deluxe-drive-xi.vercel.app/" target="_blank" rel="noopener noreferrer">Deluxe Drive</a> and sign in.</li>
+        <li>Tap your avatar, then <b>Connect Deluxe Translate</b>.</li>
+        <li>Tap <b>Generate link ID</b>, then <b>Open Deluxe Translate</b>. That is all.</li>
+      </ol>
+      <p class="dtext">On another device? Type the code it shows (it works once, for 60 seconds):</p>
+      <form class="dform" id="linkForm" autocomplete="off">
+        <input id="linkIn" class="dcode" placeholder="XXXX-XXXX-XXXX" maxlength="20" autocapitalize="characters" spellcheck="false" aria-label="Link ID">
+        <button class="btn" id="linkGo" type="submit">Connect</button>
+      </form>
+    </div>
+    <div id="driveOn" hidden>
+      <p class="dtext">Connected to <b id="driveName"></b>'s Deluxe Drive. Saved translations go to its <b>Deluxe Translate</b> folder. Translate can only add files there: it cannot see or change the rest of your drive.</p>
+      <div class="row"><a class="btn ghost small" href="https://deluxe-drive-xi.vercel.app/" target="_blank" rel="noopener noreferrer">Open Deluxe Drive</a><button class="btn ghost small" id="driveOffBtn" type="button">Disconnect</button></div>
+    </div>
+    <p class="dmsg" id="driveMsg" aria-live="polite"></p>
+    <button class="btn close" type="button">Close</button>
+  </div>
+</div>
+
 <script>
 (function(){
   var LANGS=["Afrikaans","Albanian","Amharic","Arabic","Armenian","Assamese","Azerbaijani","Basque","Belarusian","Bengali","Bosnian","Bulgarian","Burmese","Catalan","Cebuano","Chinese (Simplified)","Chinese (Traditional)","Croatian","Czech","Danish","Dutch","English","Esperanto","Estonian","Filipino","Finnish","French","Galician","Georgian","German","Greek","Gujarati","Haitian Creole","Hausa","Hebrew","Hindi","Hungarian","Icelandic","Igbo","Indonesian","Irish","Italian","Japanese","Javanese","Kannada","Kazakh","Khmer","Korean","Kurdish","Kyrgyz","Lao","Latin","Latvian","Lithuanian","Luxembourgish","Macedonian","Malagasy","Malay","Malayalam","Maltese","Maori","Marathi","Mongolian","Nepali","Norwegian","Odia","Pashto","Persian","Polish","Portuguese","Punjabi","Romanian","Russian","Samoan","Scots Gaelic","Serbian","Sindhi","Sinhala","Slovak","Slovenian","Somali","Spanish","Sundanese","Swahili","Swedish","Tajik","Tamil","Tatar","Telugu","Thai","Turkish","Turkmen","Ukrainian","Urdu","Uyghur","Uzbek","Vietnamese","Welsh","Xhosa","Yiddish","Yoruba","Zulu"];
@@ -311,6 +353,8 @@ textarea:focus-visible{outline:none}
   };
 
   var sample=null, server=false, imagesOK=true, busy=false, ctl=null, photo=null, photoURL=null, lastLang="", lastResult="";
+  // What the last finished translation was, for Save to Deluxe Drive.
+  var lastDone=null, lastSaved=false;
 
   /* language selects */
   function opt(sel,v,t){var o=document.createElement("option");o.value=v;o.textContent=t;sel.appendChild(o)}
@@ -407,6 +451,8 @@ textarea:focus-visible{outline:none}
     if(p.tr){ tr.textContent=p.tr; tr.className=""; }
     else { tr.textContent=working?"Translating…":"The translation appears here."; tr.className="ph"; }
     $("copy").disabled=!p.tr; $("reuse").disabled=!p.tr;
+    if(p.tr!==lastResult){ lastSaved=false; lastDone=null; }
+    paintSave(working);
     if(shownLang) lastLang=shownLang;
     lastResult=p.tr||"";
   }
@@ -468,6 +514,8 @@ textarea:focus-visible{outline:none}
     try{
       var r=sample ? await sample(prompt,o) : await serverTranslate(meta,ctl.signal);
       var p=parse(r.text); render(p,false);
+      if(p.tr) lastDone={mode:meta?meta.mode:"text",src:meta&&meta.mode==="text"?meta.src:p.orig,from:(p.lang&&!/^none$/i.test(p.lang))?p.lang:(meta&&meta.from)||"",to:meta?meta.to:"",tr:p.tr,at:new Date()};
+      paintSave(false);
       if(r.truncated) showMsg("The translation was cut short. Translate the rest in a second pass.");
       if(meta && meta.mode==="text" && p.tr) addHistory({from:p.lang||meta.from||"Auto",to:meta.to,src:meta.src,tr:p.tr});
     }catch(e){
@@ -612,19 +660,121 @@ textarea:focus-visible{outline:none}
     var c=o.querySelector(".sheet .close")||o.querySelector(".close"); if(c) c.focus();
   }
   function closeSheets(){
-    ["credits","more"].forEach(function(id){$(id).hidden=true});
+    ["credits","more","driveSheet"].forEach(function(id){$(id).hidden=true});
     if(lastFocus&&lastFocus.focus) lastFocus.focus();
   }
   $("openCredits").addEventListener("click",function(){openSheet("credits")});
   $("openMore").addEventListener("click",function(){openSheet("more")});
-  ["credits","more"].forEach(function(id){
+  ["credits","more","driveSheet"].forEach(function(id){
     var o=$(id);
     o.addEventListener("click",function(e){if(e.target===o) closeSheets()});
     o.querySelectorAll(".close").forEach(function(b){b.addEventListener("click",closeSheets)});
   });
   document.addEventListener("keydown",function(e){
-    if(e.key==="Escape" && (!$("credits").hidden || !$("more").hidden)) closeSheets();
+    if(e.key==="Escape" && (!$("credits").hidden || !$("more").hidden || !$("driveSheet").hidden)) closeSheets();
   });
+
+  /* Deluxe Drive: connect with a link ID (the same steps as Deluxe Docs and
+     Deluxe Convert), then Save to Deluxe Drive keeps a translation as a text
+     file in the drive's "Deluxe Translate" folder. The key this browser gets
+     can only add files there. */
+  var DRIVE_DEFAULT="https://deluxe-drive-xi.vercel.app", DRIVE_KEY="dt.drive";
+  function driveServerOk(v){
+    try{
+      var u=new URL(v), local=/^(localhost|127\.0\.0\.1|\[::1\])$/.test(u.hostname);
+      if(u.protocol==="https:"&&(u.hostname===new URL(DRIVE_DEFAULT).hostname||/^deluxe-drive-[a-z0-9-]+-deluxe12\.vercel\.app$/.test(u.hostname)||/\.deluxelordd\.workers\.dev$/.test(u.hostname))) return u.origin;
+      if(local) return u.origin;
+    }catch(e){}
+    return null;
+  }
+  var conn=null;
+  try{ var raw=JSON.parse(store.get(DRIVE_KEY)||"null"); if(raw&&raw.token&&driveServerOk(raw.server)&&(!raw.exp||raw.exp>Date.now())) conn=raw; }catch(e){}
+  function saveConn(){ try{ if(conn) localStorage.setItem(DRIVE_KEY,JSON.stringify(conn)); else localStorage.removeItem(DRIVE_KEY); }catch(e){} paintDrive(); }
+  function driveMsg(t,kind){var m=$("driveMsg");m.textContent=t||"";m.className="dmsg"+(kind?" "+kind:"")}
+  function paintDrive(){
+    var on=!!conn;
+    $("driveDot").className="ddot"+(on?" on":"");
+    $("driveLabel").textContent=on?"Deluxe Drive · "+conn.name:"Connect Deluxe Drive";
+    $("driveOff").hidden=on; $("driveOn").hidden=!on;
+    $("driveName").textContent=on?conn.name:"";
+    paintSave(busy);
+  }
+  function paintSave(working){
+    var b=$("saveDrive"); if(!b) return;
+    b.disabled=!!working||!lastDone||lastSaved==="saving";
+    b.classList.toggle("saved",lastSaved===true);
+    $("saveLabel").textContent=lastSaved===true?"Saved to Deluxe Drive":lastSaved==="saving"?"Saving…":"Save to Deluxe Drive";
+  }
+  async function driveAsk(path,opts){
+    var res;
+    for(var attempt=0;;attempt++){
+      try{ res=await fetch(conn.server+path,Object.assign({},opts,{headers:Object.assign({Authorization:"Bearer "+conn.token},(opts&&opts.headers)||{}),cache:"no-store"})); }
+      catch(e){ throw new Error("Deluxe Drive could not be reached. Check your connection."); }
+      if(res.status!==503||!res.headers.get("retry-after")||attempt>=2) break;
+      await new Promise(function(r){setTimeout(r,600*(attempt+1))});
+    }
+    var data=await res.json().catch(function(){return {}});
+    if(res.status===401){ conn=null; saveConn(); var er=new Error("Deluxe Drive disconnected this app. Connect it again."); er.code="unauthorized"; throw er; }
+    if(!res.ok) throw new Error(data.error||("Deluxe Drive answered "+res.status+"."));
+    return data;
+  }
+  async function connectDrive(code,server){
+    var base=driveServerOk(server||DRIVE_DEFAULT);
+    if(!base){ driveMsg("That link pointed at an unknown server, so it was not used.","err"); return false; }
+    var clean=String(code||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
+    if(clean.length!==12){ driveMsg("A link ID has 12 letters and digits, like ABCD-EFGH-JKLM.","err"); return false; }
+    driveMsg("Connecting…"); $("linkGo").disabled=true;
+    try{
+      var res=await fetch(base+"/api/link/redeem",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({linkId:clean,app:"deluxe-translate"}),cache:"no-store"});
+      var d=await res.json().catch(function(){return {}});
+      if(!res.ok||!d.token) throw new Error(d.error||"That link ID did not work. In Deluxe Drive, tap Generate link ID again.");
+      conn={server:base,token:d.token,name:(d.user&&d.user.name)||"Deluxe Drive",exp:Number(d.expiresIn)>0?Date.now()+Number(d.expiresIn)*1000:0};
+      saveConn(); driveMsg("Connected. Save to Deluxe Drive is ready.","ok");
+      return true;
+    }catch(e){ driveMsg(e.message||"Deluxe Drive could not be reached.","err"); return false; }
+    finally{ $("linkGo").disabled=false; }
+  }
+  function slug(t){return String(t||"").replace(/\s+/g," ").replace(/[\\\/:*?"<>|]/g,"").trim()}
+  function translationFile(d){
+    var from=d.from||"Detected language", when=d.at.toLocaleString();
+    var lines=["Deluxe Translate","From "+from+" to "+d.to,when,"",d.mode==="photo"?"Text found in the photo:":"Original:",d.src||"","","Translation:",d.tr,""];
+    var head=slug(String(d.src||d.tr).split("\n")[0]).slice(0,40).trim();
+    var name=(d.mode==="photo"?"Photo":slug(from))+" to "+slug(d.to)+(head?" - "+head:"")+".txt";
+    return {name:name,blob:new Blob([lines.join("\n")],{type:"text/plain"})};
+  }
+  async function saveToDrive(){
+    if(!lastDone) return;
+    if(!conn){ openSheet("driveSheet"); driveMsg("Connect Deluxe Drive first, then save again."); return; }
+    var d=lastDone, f=translationFile(d);
+    lastSaved="saving"; paintSave(false);
+    try{
+      var r=await driveAsk("/api/import",{method:"POST",body:f.blob,headers:{"Content-Type":"text/plain","X-Deluxe-Name":encodeURIComponent(f.name)}});
+      if(lastDone===d) lastSaved=true;
+      showMsg("Saved “"+r.file.name+"” in Deluxe Drive › "+(r.folder||"Deluxe Translate")+".");
+    }catch(e){
+      if(lastDone===d) lastSaved=false;
+      showMsg(e.message||"Could not save to Deluxe Drive.",true);
+      if(e.code==="unauthorized") openSheet("driveSheet");
+    }
+    paintSave(false);
+  }
+  $("saveDrive").addEventListener("click",saveToDrive);
+  $("openDrive").addEventListener("click",function(){driveMsg("");openSheet("driveSheet")});
+  $("linkForm").addEventListener("submit",async function(e){e.preventDefault(); if(await connectDrive($("linkIn").value)) $("linkIn").value="";});
+  $("driveOffBtn").addEventListener("click",function(){
+    var was=conn; conn=null; saveConn(); driveMsg("Disconnected.");
+    if(was) fetch(was.server+"/api/link/session",{method:"DELETE",headers:{Authorization:"Bearer "+was.token}}).catch(function(){});
+  });
+  // Opened from Deluxe Drive's "Open Deluxe Translate": …/#link=CODE&drive=https://…
+  (function(){
+    var h=new URLSearchParams(location.hash.slice(1)), code=h.get("link");
+    if(!code) return;
+    history.replaceState(null,"",location.pathname+location.search);
+    openSheet("driveSheet"); $("linkIn").value=code;
+    connectDrive(code,h.get("drive")||undefined);
+  })();
+  paintDrive();
+  if(conn) driveAsk("/api/auth/me",{}).then(function(d){ if(d.user&&d.user.name&&d.user.name!==conn.name){conn.name=d.user.name;saveConn();} }).catch(function(){});
 
   /* Claude access */
   if(window.claude && window.claude.use){

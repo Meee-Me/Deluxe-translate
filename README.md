@@ -12,6 +12,15 @@ Translate typed text or photos of signs, menus, documents and handwriting betwee
 - Full-screen credits (directed by Shivad Sujith, AI support by Claude, powered by Netlify)
 - "More by Deluxelord" screen linking to Deluxe Drive, Deluxe Docs, Deluxe Convert and YouTube Guider AI
 
+## Deluxe Drive
+
+**Connect Deluxe Drive** (next to Credits) links Translate to your Deluxe Drive, with the same steps as Deluxe
+Docs and Deluxe Convert: in Deluxe Drive, account menu → **Connect Deluxe Translate** → **Generate link ID** →
+**Open Deluxe Translate** (or type the code into Translate). After that every translation has **Save to Deluxe
+Drive**, which saves the original text (or the text found in a photo) and the translation as a `.txt` file in a
+**Deluxe Translate** folder in the drive. The key Translate gets can only add files: it cannot see or change the
+rest of the drive. It lasts 30 days and is kept in this browser; **Disconnect** ends it.
+
 ## Files
 
 - `public/index.html`: the whole front end in one file (HTML, CSS and JavaScript, no build step)
