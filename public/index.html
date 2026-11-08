@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Deluxe Translate</title>
-<link rel="icon" type="image/svg+xml" href="/icon.svg"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#23399E">
+<link rel="icon" type="image/svg+xml" href="/icon.svg"><script src="/deluxe-apps.js?v=1" defer></script><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#23399E">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -51,6 +51,8 @@ header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-be
 .brand h1{margin:0;font:600 30px/1 var(--display);letter-spacing:-.01em}
 .brand h1 em{font-style:italic;font-weight:500}
 .tagline{margin:0;color:var(--muted);font-size:13px}
+header{position:relative;padding-right:52px}
+.head-apps{position:absolute;top:-4px;right:-6px}
 .rule{height:2px;width:48px;background:var(--brass);border:0;margin:0}
 
 .modes{display:flex;gap:8px}
@@ -169,6 +171,7 @@ textarea:focus-visible{outline:none}
       <hr class="rule">
     </div>
     <p class="tagline">Text and photos, 100+ languages</p>
+    <div class="head-apps" data-deluxe-apps data-current="translate"></div>
   </header>
 
   <div class="modes" role="tablist" aria-label="Input type">
