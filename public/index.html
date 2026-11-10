@@ -46,6 +46,8 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 
 header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 16px}
+.deluxe-account{flex-basis:100%;display:flex;justify-content:flex-end;min-height:0}
+.deluxe-account:empty{display:none}
 .brand{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
 .brand h1{margin:0;font:600 30px/1 var(--display);letter-spacing:-.01em}
 .brand h1 em{font-style:italic;font-weight:500}
@@ -168,6 +170,7 @@ textarea:focus-visible{outline:none}
       <hr class="rule">
     </div>
     <p class="tagline">Text and photos, 100+ languages</p>
+    <div class="deluxe-account" id="deluxeAccount"></div>
   </header>
 
   <div class="modes" role="tablist" aria-label="Input type">
@@ -295,13 +298,20 @@ textarea:focus-visible{outline:none}
   </div>
 </div>
 
+<!-- Sign in with Deluxe Main: your recent translations follow your Deluxe account. -->
+<script src="https://deluxe-main.deluxelordd.workers.dev/deluxe.js" data-app="translate"></script>
 <script>
 (function(){
   var LANGS=["Afrikaans","Albanian","Amharic","Arabic","Armenian","Assamese","Azerbaijani","Basque","Belarusian","Bengali","Bosnian","Bulgarian","Burmese","Catalan","Cebuano","Chinese (Simplified)","Chinese (Traditional)","Croatian","Czech","Danish","Dutch","English","Esperanto","Estonian","Filipino","Finnish","French","Galician","Georgian","German","Greek","Gujarati","Haitian Creole","Hausa","Hebrew","Hindi","Hungarian","Icelandic","Igbo","Indonesian","Irish","Italian","Japanese","Javanese","Kannada","Kazakh","Khmer","Korean","Kurdish","Kyrgyz","Lao","Latin","Latvian","Lithuanian","Luxembourgish","Macedonian","Malagasy","Malay","Malayalam","Maltese","Maori","Marathi","Mongolian","Nepali","Norwegian","Odia","Pashto","Persian","Polish","Portuguese","Punjabi","Romanian","Russian","Samoan","Scots Gaelic","Serbian","Sindhi","Sinhala","Slovak","Slovenian","Somali","Spanish","Sundanese","Swahili","Swedish","Tajik","Tamil","Tatar","Telugu","Thai","Turkish","Turkmen","Ukrainian","Urdu","Uyghur","Uzbek","Vietnamese","Welsh","Xhosa","Yiddish","Yoruba","Zulu"];
   var $=function(id){return document.getElementById(id)};
   var store={
     get:function(k){try{return localStorage.getItem(k)}catch(e){return null}},
-    set:function(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+    set:function(k,v){
+      try{localStorage.setItem(k,v)}catch(e){}
+      // Signed in with Deluxe Main: kept in the Deluxe account too.
+      var D=window.Deluxe;
+      if(D&&D.user()&&/^dt\.(hist|recent|to)$/.test(k)) D.data.put(k,v).catch(function(){});
+    }
   };
 
   var sample=null, server=false, imagesOK=true, busy=false, ctl=null, photo=null, photoURL=null, lastLang="", lastResult="";
@@ -597,6 +607,24 @@ textarea:focus-visible{outline:none}
   }
   $("histClear").addEventListener("click",function(){hist=[];store.set("dt.hist","[]");renderHist()});
   renderHist();
+
+  /* Deluxe account: after signing in, the account's saved list and languages
+     are used; what this browser had before is saved to the account first time. */
+  if(window.Deluxe){
+    Deluxe.button($("deluxeAccount"),{label:"Sign in with Deluxe Main"});
+    Deluxe.ready.then(function(user){
+      if(!user) return;
+      return Promise.all([Deluxe.data.get("dt.hist"),Deluxe.data.get("dt.recent")]).then(function(v){
+        var h=null,r=null;
+        try{h=v[0]?JSON.parse(v[0]):null}catch(e){}
+        try{r=v[1]?JSON.parse(v[1]):null}catch(e){}
+        if(Array.isArray(h)){hist=h;try{localStorage.setItem("dt.hist",v[0])}catch(e){}renderHist()}
+        else if(hist.length) store.set("dt.hist",JSON.stringify(hist));
+        if(r&&Array.isArray(r.from)&&Array.isArray(r.to)){recent=r;try{localStorage.setItem("dt.recent",v[1])}catch(e){}renderChips()}
+        else store.set("dt.recent",JSON.stringify(recent));
+      });
+    }).catch(function(){});
+  }
 
   /* credits and more-sites screens */
   var lastFocus=null;

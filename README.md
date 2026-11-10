@@ -7,7 +7,7 @@ Translate typed text or photos of signs, menus, documents and handwriting betwee
 - Text translation with automatic source-language detection, plus an "Other…" option for any language not on the list
 - Photo translation: take a photo with the phone camera, choose an image, or drop/paste one. The page reads the text in the photo and shows the original beside the translation
 - Copy, swap languages, reuse a translation as new input
-- Recent text translations kept in the browser
+- Recent text translations kept in the browser, and in your Deluxe account when you **Sign in with Deluxe Main** (accounts are made only on [Deluxe Main](https://deluxe-main.deluxelordd.workers.dev))
 - Light and dark themes, built for phone screens first
 - Full-screen credits (directed by Shivad Sujith, AI support by Claude, powered by Netlify)
 - "More by Deluxelord" screen linking to Deluxe Convert and YouTube Guider AI
@@ -25,6 +25,13 @@ On Netlify, the page sends text (or a downsized JPEG of the photo) to `/api/tran
 The function limits input to 5,000 characters or one photo, and is rate limited to 20 requests per minute per visitor. Adjust `windowLimit` in `translate.mts` if you need more or less.
 
 The same `public/index.html` also works as a Claude Artifact, where it calls Claude directly through the artifact `sample` capability and does not use the function.
+
+## Deluxe account
+
+`public/index.html` loads `deluxe.js` from Deluxe Main. Signed in, the recent translations and recent
+languages are saved in the Deluxe account (Deluxe Main, under the `translate` website), so they follow
+you to other devices. Signed out, everything works as before. The address of this site must be listed in
+Deluxe Main's `worker/apps.js` for sign-in to work.
 
 ## Notes
 
